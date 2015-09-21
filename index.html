@@ -18,22 +18,45 @@
 		var map;
 
 		function initMap() {
-		  map = new google.maps.Map(document.getElementById('map'), {
-		    center: {lat: -34.397, lng: 150.644},
-		    zoom: 3,
-		    mapTypeId: google.maps.MapTypeId.HYBRID
-		  });
+			map = new google.maps.Map(document.getElementById('map'), {
+				center: {lat: -34.397, lng: 150.644},
+				zoom: 3,
+				mapTypeId: google.maps.MapTypeId.HYBRID
+			});
+			map.firstRunThrough = true;
+		};
 
-		  var issURL = "http://api.open-notify.org/iss-now.json?callback=?"
+
+		function interval(func, wait, times){
+			var interv = function(w, t){
+				return function(){
+					if(typeof t === "undefined" || t-- > 0){
+						setTimeout(interv, w);
+						try{
+							func.call(null);
+						}
+						catch(e){
+							t = 0;
+							throw e.toString();
+						}
+					}
+				};
+			}(wait, times);
+
+			setTimeout(interv, wait);
+		};
+
+		interval(function(){
+    	var issURL = "http://api.open-notify.org/iss-now.json?callback=?"
 		  $.getJSON(issURL, function(data) {
 		  	var issLocal = {lat: data.iss_position.latitude, lng: data.iss_position.longitude};
-
-		  	map = new google.maps.Map(document.getElementById('map'), {
-			    center: issLocal,
-			    zoom: 4,
-			    mapTypeId: google.maps.MapTypeId.HYBRID
-			  });
-
+			  if(map.firstRunThrough){
+			  	map = new google.maps.Map(document.getElementById('map'), {
+				    center: issLocal,
+				    zoom: 4,
+				    mapTypeId: google.maps.MapTypeId.HYBRID
+				  });
+			  }
 
 				marker = new google.maps.Marker({
 			    map: map,
@@ -41,10 +64,10 @@
 			    position: issLocal,
 			    title: "International Space Station"
 			  });
-			})
-		};
+			});
+    }, 5000);
 	</script>
 	<script async defer src="http://maps.googleapis.com/maps/api/js?key=AIzaSyAI3EnHHfZFhi0tdNA1QLlEUIeq6mgs-WA&callback=initMap">
-    </script>
+	</script>
 </body>
 </html>
